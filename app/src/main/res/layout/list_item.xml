@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/lineNumberLeft"
+            android:layout_width="20dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:text="01"
+            android:textSize="10sp"
+            />
+        <TextView
+        android:id="@+id/lineNumberRight"
+        android:layout_width="20dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:text="01"
+        android:textSize="10sp"
+        />
+        <TextView
+                android:layout_marginLeft="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/lineCode"
+                android:text="My code here print ln i love my life"
+                android:textStyle="bold"
+                android:textSize="10sp"/>
+
+
+</LinearLayout>
+
+</LinearLayout>
