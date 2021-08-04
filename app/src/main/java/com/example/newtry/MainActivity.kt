@@ -1,6 +1,7 @@
 package com.example.newtry
 
 import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -27,13 +28,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var myCommit: TextView
     private lateinit var nextButton: Button
+    private lateinit var splitBotton: Button
+    private lateinit var unifiedButton: Button
     private lateinit var mylist : ListView
+    private lateinit var movetoSecondAct: Button
 
 
     private lateinit var DataArrayList : ArrayList<LineCodeUnified>
     private lateinit var DataArrayListSplit : ArrayList<LineCodeSplit>
 
-
+    private  var comitId = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,27 +46,45 @@ class MainActivity : AppCompatActivity() {
         mylist = findViewById(R.id.listView)
         myCommit = findViewById(R.id.textView)
         nextButton = findViewById(R.id.buttonNext)
+        splitBotton = findViewById(R.id.button_Split)
+        unifiedButton = findViewById(R.id.button_unified)
+        movetoSecondAct = findViewById(R.id.move_second_activity)
 
 
-        var comitId = 0
+
         val repository = Repository()
         val viewModelFactory = MainViewModelFactory(repository)
         viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+        gettingUnifiedResponse(comitId)
 
         nextButton.setOnClickListener{
-            gettingSplitResponse(comitId)
-            //gettingUnifiedResponse(comitId)
             comitId ++
+            gettingUnifiedResponse(comitId)
             if (comitId == 6 ){
                 nextButton.isEnabled = false
                 nextButton.setTextColor(ContextCompat.getColor(this, R.color.white))
                 nextButton.setBackgroundColor(ContextCompat.getColor(this, R.color.teal_700))
 
-
             }
         }
-        //gettingUnifiedResponse(comitId)
-        gettingSplitResponse(comitId)
+        splitBotton.setOnClickListener{
+            gettingSplitResponse(comitId)
+
+        }
+
+        unifiedButton.setOnClickListener{
+            gettingUnifiedResponse(comitId)
+
+        }
+        movetoSecondAct.setOnClickListener{
+
+            val intent = Intent (this , Pulls::class.java)
+            startActivity(intent)
+
+
+        }
+
+
 
 
     }
@@ -155,8 +177,169 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
     fun gettingSplitResponse(id : Int){
+
+        viewModel.getPost()
+        viewModel.myresp.observe(this, Observer { response ->
+            if (response.isSuccessful) {
+                DataArrayListSplit = ArrayList()
+                val myPath = response.body()?.files?.get(id)?.patch.toString()
+                myCommit.text = response.body()?.files?.get(id)?.filename.toString()
+
+                DataArrayListSplit = ArrayList()
+                var myLoneofCode : LineCodeSplit
+
+                var linesList = myPath.split("\n").toTypedArray()
+                var lineLNumber = 0
+                var lineRNumber = 0
+                var lineArrayNumber = 0
+                var skipthisloop = true
+
+
+                for (i in 1..linesList.count()) {
+
+                    var myline = linesList[i - 1]
+                    var findindex = myline.startsWith("@@ -")
+
+                    if (findindex) {
+
+                        var Firstline = myline.split(",").toTypedArray()
+
+                        var theLnumber = Firstline[0].split("-").toTypedArray()
+                        var theRnumber = Firstline[1].split("+").toTypedArray()
+                        lineRNumber = theRnumber[1].toInt()
+                        lineLNumber = theLnumber[1].toInt()
+                        myLoneofCode = LineCodeSplit(" ", " ", linesList[i - 1], " ", 0, 0)
+                        lineArrayNumber ++
+                        DataArrayListSplit.add(myLoneofCode)
+
+                    } else {
+
+                        var gototheloop = true
+                        if (lineArrayNumber < i){
+
+
+                        var checkNegative = linesList[i - 1].startsWith("-")
+                        var checkPositive = linesList[i - 1].startsWith("+")
+                            var checkempty = linesList[i - 1].startsWith(" ")
+
+                            if (checkempty) {
+                                myLoneofCode = LineCodeSplit(
+                                    lineLNumber.toString(),
+                                    lineRNumber.toString(),
+                                    linesList[i - 1],
+                                    linesList[i - 1],
+                                    1,
+                                    1
+                                )
+                                DataArrayListSplit.add(myLoneofCode)
+                                lineArrayNumber++
+                                lineRNumber++
+                                lineLNumber++
+                                skipthisloop= true
+                            }
+
+                        var myIndex = i
+                        var negativecounter = 0
+                        var possitivecounter = 0
+                        if (checkNegative) {
+                            negativecounter++
+                        }
+                        if (checkPositive) {
+                            possitivecounter++
+                        }
+                        while (checkNegative || checkPositive) {
+                            var checkNextLineNegative = linesList[myIndex].startsWith("-")
+                            var checkNextLineisPositive = linesList[myIndex].startsWith("+")
+                            if (checkNextLineNegative) {
+                                negativecounter++
+                            }
+                            if (checkNextLineisPositive) {
+                                possitivecounter++
+                            }
+                            myIndex++
+                            if (!checkNextLineNegative && !checkNextLineisPositive) {
+                                break
+                            }
+                        }
+                        if (possitivecounter == negativecounter && negativecounter != 0) {
+
+                            myIndex = i - 1
+                            for (a in 1..negativecounter) {
+                                myLoneofCode = LineCodeSplit(
+                                    lineLNumber.toString(),
+                                    lineRNumber.toString(),
+                                    linesList[myIndex + a - 1],
+                                    linesList[myIndex + a - 1 + negativecounter],
+                                    2,
+                                    3
+                                )
+                                skipthisloop =false
+                                lineLNumber++
+                                lineRNumber++
+                                DataArrayListSplit.add(myLoneofCode)
+                                lineArrayNumber++
+                            }
+
+                        }
+                        if (possitivecounter > 0 && negativecounter == 0 && skipthisloop ) {
+                            myIndex = i - 1
+                            for (a in 1..possitivecounter) {
+                                myLoneofCode = LineCodeSplit(
+                                    lineLNumber.toString(),
+                                    lineRNumber.toString(),
+                                    " ",
+                                    linesList[myIndex + a - 1],
+                                    5,
+                                    3
+                                )
+                                lineRNumber++
+                                DataArrayListSplit.add(myLoneofCode)
+                                lineArrayNumber++
+                                skipthisloop =false
+
+                            }
+
+                        }
+                        if (negativecounter > 0 && possitivecounter == 0 && skipthisloop ) {
+                            myIndex = i - 1
+                            for (a in 1..negativecounter) {
+                                myLoneofCode = LineCodeSplit(
+                                    lineLNumber.toString(),
+                                    lineRNumber.toString(),
+                                    linesList[myIndex + a - 1],
+                                    " ",
+                                    2,
+                                    5
+                                )
+                                lineRNumber++
+                                DataArrayListSplit.add(myLoneofCode)
+                                lineArrayNumber++
+                                skipthisloop =false
+                            }
+
+                        }
+
+                    }
+                }
+
+                    mylist.adapter = AdapterSplit(this, DataArrayListSplit)
+
+            }
+
+        }
+
+    })
+
+}
+
+
+
+
+
+
+
+    fun gettingSplitOldResponse(id : Int){
 
         viewModel.getPost()
         viewModel.myresp.observe(this, Observer { response ->

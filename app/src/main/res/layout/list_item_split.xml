@@ -3,7 +3,7 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="4dp">
+    >
     <TextView
         android:id="@+id/lineNumberLeftS"
         android:layout_width="30dp"
@@ -14,7 +14,7 @@
         android:textSize="10sp"/>
     <TextView
         android:id="@+id/lineCodeLeftS"
-        android:layout_width="180dp"
+        android:layout_width="175dp"
         android:layout_height="wrap_content"
         android:text="line of coode to process"
 
@@ -30,7 +30,7 @@
         android:textSize="10sp"/>
     <TextView
         android:id="@+id/lineCodeRightS"
-        android:layout_width="180dp"
+        android:layout_width="175dp"
         android:layout_height="wrap_content"
         android:text="line of coode to process"
 
