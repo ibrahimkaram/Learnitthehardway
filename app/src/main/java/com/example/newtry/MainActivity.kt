@@ -91,82 +91,96 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    fun gettingUnifiedResponse(id : Int){
+    fun gettingUnifiedResponse(comitId : Int){
             viewModel.getPost()
             viewModel.myresp.observe(this, Observer {
                     response ->
                 if(response.isSuccessful){
                     DataArrayList = ArrayList()
-                    val myPath = response.body()?.files?.get(id)?.patch.toString()
-                    myCommit.text = response.body()?.files?.get(id)?.filename.toString()
 
+                    myCommit.text = response.body()?.files?.get(comitId)?.filename.toString()
+
+
+                    // myPath receive the string from the response retrofit
+                    val myPath = response.body()?.files?.get(comitId)?.patch.toString()
+
+
+
+                    // Creating the dataArraylist object that will hold the data to send it to the recyclerview
                     DataArrayList = ArrayList()
-                    var myLoneofCode = LineCodeUnified("1","1","this this my first code", 0)
+
+                    var createOneLineArrayList : LineCodeUnified
 
 
 
                     var linesList = myPath.split("\n").toTypedArray()
-                    var lineLNumber = 0
-                    var lineRNumber = 0
+                    /* create Int that track the number line of the script */
+
+                    var lineLeftNumber = 0
+                    var lineRightNumber = 0
+
+                    // loop that goes through each line
+                    for( i in linesList.indices){
+
+                        // create a string form each array
+                        var lineScriptByIndex = linesList[i]
+
+                        var checkIfCommentsLine = lineScriptByIndex.startsWith("@@ -")
+
+                        if(checkIfCommentsLine){
 
 
-                    for( i in 1..linesList.count()){
+                            var arrayListComment = lineScriptByIndex.split(",").toTypedArray()
 
+                            var theLnumber = arrayListComment[0].split("-").toTypedArray()
+                            var theRnumber = arrayListComment[1].split("+").toTypedArray()
 
-                        var myline = linesList[i-1]
+                            // setting the numberline from the comments
+                            lineRightNumber = theRnumber[1].toInt()
+                            lineLeftNumber = theLnumber[1].toInt()
 
-                        var findindex = myline.startsWith("@@ -")
-
-                        if(findindex){
-
-
-                            var Firstline = myline.split(",").toTypedArray()
-
-                            var theLnumber = Firstline[0].split("-").toTypedArray()
-                            var theRnumber = Firstline[1].split("+").toTypedArray()
-                            lineRNumber = theRnumber[1].toInt()
-                            lineLNumber = theLnumber[1].toInt()
-                            myLoneofCode = LineCodeUnified(""," ",linesList[i-1], 0) //myLoneofCode = LineCodeUnified("  ","  ",linesList[i-1], 0)
-                            DataArrayList.add(myLoneofCode)
+                            createOneLineArrayList = LineCodeUnified(""," ",linesList[i], 0)
+                            DataArrayList.add(createOneLineArrayList)
 
 
                         } else{
 
-                       var checkPossitive = myline.startsWith("+")
-                            if (checkPossitive) {
-                                myLoneofCode = LineCodeUnified(
+                            // checking if the line start with "+"
+                            if ( lineScriptByIndex.startsWith("+") ) {
+                                createOneLineArrayList = LineCodeUnified(
                                     " ",
-                                    lineRNumber.toString(),
-                                    linesList[i - 1],
+                                    lineRightNumber.toString(),
+                                    linesList[i],
                                     2
                                 )
-                                DataArrayList.add(myLoneofCode)
-                                lineRNumber++
-                            }else {
+                                DataArrayList.add(createOneLineArrayList)
+                                lineRightNumber++
                             }
-                            var checkNegative = myline.startsWith("-")
-                            if (checkNegative) {
-                                    myLoneofCode = LineCodeUnified(
-                                        lineLNumber.toString(),
-                                        " ",
-                                        linesList[i - 1],
-                                        3
-                                    )
-                                    DataArrayList.add(myLoneofCode)
-                                lineLNumber++
-                                } else{}
 
-                          if(!checkNegative && !checkPossitive){
+                            // checking if the line start with "-"
+                            if (lineScriptByIndex.startsWith("-")) {
+                                createOneLineArrayList = LineCodeUnified(
+                                    lineLeftNumber.toString(),
+                                    " ",
+                                    linesList[i],
+                                    3
+                                )
+                                DataArrayList.add(createOneLineArrayList)
+                                lineLeftNumber++
+                            }
 
-                              myLoneofCode = LineCodeUnified(lineLNumber.toString(),lineRNumber.toString(),linesList[i-1], 1)
-                              DataArrayList.add(myLoneofCode)
-                              lineRNumber ++
-                              lineLNumber ++
-
+                            // checking if the line is a regular line of code
+                          if(!lineScriptByIndex.startsWith("+") && !lineScriptByIndex.startsWith("-")){
+                              createOneLineArrayList = LineCodeUnified(lineLeftNumber.toString(),lineRightNumber.toString(),linesList[i], 1)
+                              DataArrayList.add(createOneLineArrayList)
+                              lineRightNumber ++
+                              lineLeftNumber ++
                           }
-                                }
+                                } //loop ends
 
+               // DataArraylist object created
 
+                        // sending the object to the adapter
                     mylist.adapter = MyAdapter(this,DataArrayList)
 
                 }
@@ -286,7 +300,7 @@ class MainActivity : AppCompatActivity() {
                             myIndex = i - 1
                             for (a in 1..possitivecounter) {
                                 myLoneofCode = LineCodeSplit(
-                                    lineLNumber.toString(),
+                                    " ",
                                     lineRNumber.toString(),
                                     " ",
                                     linesList[myIndex + a - 1],
@@ -305,7 +319,7 @@ class MainActivity : AppCompatActivity() {
                             myIndex = i - 1
                             for (a in 1..negativecounter) {
                                 myLoneofCode = LineCodeSplit(
-                                    lineLNumber.toString(),
+                                    " ",
                                     lineRNumber.toString(),
                                     linesList[myIndex + a - 1],
                                     " ",
